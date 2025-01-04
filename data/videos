@@ -1,0 +1,15 @@
+[
+    {
+        "id": 0,
+        "videoId": "2656e6c7",
+        "fileName": "rickroll",
+        "extension": "mp4",
+        "dimensions": {
+            "width": 1280,
+            "height": 720
+        },
+        "userId": 1,
+        "extractedAudio": false,
+        "resizes": {}
+    }
+]

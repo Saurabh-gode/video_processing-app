@@ -1,0 +1,75 @@
+const { spawn } = require("node:child_process");
+
+const makeThumbnail = async (fullPath, thumbnail) => {
+    // ffmpeg -i rickroll.mp4 -ss 5 -vframes 1 thumbnail.png
+
+    return new Promise((resolve, reject) => {
+
+        const ffprocess = spawn("ffmpeg", [
+            `-i`,
+            `${fullPath}`,
+            `-ss`,
+            `3`,
+            `-vframes`,
+            `1`,
+            `${thumbnail}`,
+        ])
+
+        ffprocess.on('exit', (code, signal) => {
+            console.log(`ffprocess process exited with code ${code} and signal ${signal}`);
+            resolve("thumbnail created.")
+        });
+
+        ffprocess.on('error', (err) => {
+            reject(err);
+        });
+    })
+
+
+}
+
+const getDimensions = async (fullPath) => {
+    // ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=p=0 video.mp4
+
+    return new Promise((resolve, reject) => {
+
+        const ffprocess = spawn("ffprobe", [
+            `-v`,
+            `error`,
+            `-select_streams`,
+            `v:0`,
+            `-show_entries`,
+            `stream=width,height`,
+            `-of`,
+            `csv=p=0`,
+            `${fullPath}`,
+        ])
+        let width = 0, height = 0;
+
+        ffprocess.stdout.on("data", (data) => {
+            // console.log(data.toString("utf-8"));
+            let d = data.toString("utf-8").replaceAll(" ", "").split(",");
+            width = d[0];
+            height = d[1];
+        })
+
+        ffprocess.on('exit', (code, signal) => {
+            console.log(`ffprocess process exited with code ${code} and signal ${signal}`);
+            resolve({
+                width: Number(width),
+                height: Number(height)
+            })
+        });
+
+        ffprocess.on('error', (err) => {
+            reject(err);
+        });
+    })
+
+}
+
+
+module.exports = {
+    makeThumbnail,
+    getDimensions
+};
