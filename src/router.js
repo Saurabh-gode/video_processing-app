@@ -32,4 +32,7 @@ module.exports = (server) => {
   // get thumbnails
   server.route("get", "/get-video-asset", Video.getVideoAssets);
 
+  // get audio
+  server.route("patch", "/api/video/extract-audio", Video.extractAudio);
+
 };

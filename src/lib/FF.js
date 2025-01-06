@@ -68,8 +68,36 @@ const getDimensions = async (fullPath) => {
 
 }
 
+const getExtractedAudio = async (fullPath, targetPath) => {
+    // ffmpeg -i rickroll.mp4 -vn -c:a copy audio.aac 
+
+    return new Promise((resolve, reject) => {
+
+        const ffprocess = spawn("ffmpeg", [
+            `-i`,
+            `${fullPath}`,
+            `-vn`,
+            `-c:a`,
+            `copy`,
+            `${targetPath}`,
+        ])
+
+        ffprocess.on('exit', (code, signal) => {
+            console.log(`ffprocess process exited with code ${code} and signal ${signal}`);
+            resolve("Audio extracted.")
+        });
+
+        ffprocess.on('error', (err) => {
+            reject(err);
+        });
+    })
+
+
+}
+
 
 module.exports = {
     makeThumbnail,
-    getDimensions
+    getDimensions,
+    getExtractedAudio
 };

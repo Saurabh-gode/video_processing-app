@@ -4,7 +4,7 @@ const fs = require("fs/promises");
 const { pipeline } = require("node:stream/promises");
 const util = require("../lib/util");
 const DB = require("../DB");
-const { makeThumbnail, getDimensions } = require("../lib/FF");
+const { makeThumbnail, getDimensions, getExtractedAudio } = require("../lib/FF");
 
 const getVideos = async (req, res, handlerErr) => {
     try {
@@ -159,8 +159,41 @@ const uploadVideo = async (req, res, handlerErr) => {
     }
 }
 
+const extractAudio = async (req, res, handlerErr) => {
+    const videoId = req.params.get("videoId");
+
+    DB.update();
+    const video = DB.videos.find((video) => video.videoId === videoId);
+
+    if (video.extractedAudio) {
+        return handlerErr({ status: 400, message: "Audio is already extracted." })
+    }
+
+    const dirPath = `./storage/${videoId}`;
+    const fullPath = path.join(__dirname, "../../");
+    const filePath = `${dirPath}/original.${video.extension}`;
+    const targetAudioPath = `${dirPath}/audio.aac`;
+
+    try {
+
+        await getExtractedAudio(`${fullPath}/${filePath}`, targetAudioPath);
+
+        video.extractedAudio = true;
+        DB.save();
+
+        res.status(200).json({ status: "success", message: "Audio was extracted successfully." })
+
+
+    } catch (error) {
+        console.log(error);
+        util.deleteFolder(targetAudioPath);
+        if (error.code !== "ECONNRESET") return handlerErr({ status: 400, message: "something went wrong" })
+    }
+}
+
 module.exports = {
     getVideos,
     uploadVideo,
-    getVideoAssets
+    getVideoAssets,
+    extractAudio
 }
