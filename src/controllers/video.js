@@ -4,7 +4,10 @@ const fs = require("fs/promises");
 const { pipeline } = require("node:stream/promises");
 const util = require("../lib/util");
 const DB = require("../DB");
-const { makeThumbnail, getDimensions, getExtractedAudio } = require("../lib/FF");
+const FF = require("../lib/FF");
+const JobQueue = require("../lib/JobQueue");
+
+const jobs = new JobQueue();
 
 const getVideos = async (req, res, handlerErr) => {
     try {
@@ -128,9 +131,9 @@ const uploadVideo = async (req, res, handlerErr) => {
         await pipeline(req, fileStream)
 
         // make thumbnail for the video file.
-        await makeThumbnail(`${fullPath}/${filePath}`, `${fullPath}/${thumbnailPath}`);
+        await FF.makeThumbnail(`${fullPath}/${filePath}`, `${fullPath}/${thumbnailPath}`);
 
-        const dimensions = await getDimensions(`${fullPath}/${filePath}`);
+        const dimensions = await FF.getDimensions(`${fullPath}/${filePath}`);
 
         console.log(dimensions);
 
@@ -176,7 +179,7 @@ const extractAudio = async (req, res, handlerErr) => {
 
     try {
 
-        await getExtractedAudio(`${fullPath}/${filePath}`, targetAudioPath);
+        await FF.getExtractedAudio(`${fullPath}/${filePath}`, targetAudioPath);
 
         video.extractedAudio = true;
         DB.save();
@@ -191,9 +194,35 @@ const extractAudio = async (req, res, handlerErr) => {
     }
 }
 
+const resizeVideo = async (req, res, handlerErr) => {
+    const videoId = req.body.videoId;
+    const width = Number(req.body.width);
+    const height = Number(req.body.height);
+
+    DB.update();
+    const video = DB.videos.find((video) => video.videoId === videoId);
+    video.resizes[`${width}x${height}`] = { processing: true };
+    DB.save();
+
+    
+    jobs.enqueue({
+        type: "resize",
+        videoId,
+        width,
+        height
+    })
+
+    res.status(200).json({
+        status: "success",
+        message: "The Video is now being processed!"
+    })
+
+}
+
 module.exports = {
     getVideos,
     uploadVideo,
     getVideoAssets,
-    extractAudio
+    extractAudio,
+    resizeVideo
 }

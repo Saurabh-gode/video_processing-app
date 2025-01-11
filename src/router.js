@@ -35,4 +35,7 @@ module.exports = (server) => {
   // get audio
   server.route("patch", "/api/video/extract-audio", Video.extractAudio);
 
+  // get audio
+  server.route("put", "/api/video/resize", Video.resizeVideo);
+
 };

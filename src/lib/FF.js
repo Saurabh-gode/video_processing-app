@@ -95,9 +95,38 @@ const getExtractedAudio = async (fullPath, targetPath) => {
 
 }
 
+const resizeVideo = async (originalVideoPath, targetVideoPath, width, height) => {
+    // ffmpeg -i rickroll.mp4 -vf scale=320:240 -c:a copy rickroll-320x240.mp4 
+
+    return new Promise((resolve, reject) => {
+
+        const ffprocess = spawn("ffmpeg", [
+            `-i`,
+            `${originalVideoPath}`,
+            `-vf`,
+            `scale=${width}:${height}`,
+            `-c:a`,
+            `copy`,
+            `${targetVideoPath}`,
+        ])
+
+        ffprocess.on('exit', (code, signal) => {
+            console.log(`ffprocess process exited with code ${code} and signal ${signal}`);
+            resolve("video resized.")
+        });
+
+        ffprocess.on('error', (err) => {
+            reject(err);
+        });
+    })
+
+
+}
+
 
 module.exports = {
     makeThumbnail,
     getDimensions,
-    getExtractedAudio
+    getExtractedAudio,
+    resizeVideo
 };
