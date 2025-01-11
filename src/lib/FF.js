@@ -109,8 +109,15 @@ const resizeVideo = async (originalVideoPath, targetVideoPath, width, height) =>
             `copy`,
             `-threads`,
             `2`,
+            "-loglevel",
+            "error",
+            "-y",
             `${targetVideoPath}`,
         ])
+
+        ffprocess.stderr.on("data", (data) => {
+            console.log(data.toString("utf8"));
+        });
 
         ffprocess.on('exit', (code, signal) => {
             console.log(`ffprocess process exited with code ${code} and signal ${signal}`);
