@@ -107,6 +107,8 @@ const resizeVideo = async (originalVideoPath, targetVideoPath, width, height) =>
             `scale=${width}:${height}`,
             `-c:a`,
             `copy`,
+            `-threads`,
+            `2`,
             `${targetVideoPath}`,
         ])
 
@@ -116,6 +118,7 @@ const resizeVideo = async (originalVideoPath, targetVideoPath, width, height) =>
         });
 
         ffprocess.on('error', (err) => {
+            console.log('error resize', err)
             reject(err);
         });
     })

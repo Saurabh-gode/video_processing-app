@@ -1,13 +1,20 @@
 const path = require("path");
 const crypto = require("crypto");
+const cluster = require("node:cluster");
 const fs = require("fs/promises");
 const { pipeline } = require("node:stream/promises");
 const util = require("../lib/util");
 const DB = require("../DB");
 const FF = require("../lib/FF");
+
 const JobQueue = require("../lib/JobQueue");
 
-const jobs = new JobQueue();
+let jobs;
+
+if (cluster.isPrimary) {
+    jobs = new JobQueue();
+}
+
 
 const getVideos = async (req, res, handlerErr) => {
     try {
@@ -204,13 +211,19 @@ const resizeVideo = async (req, res, handlerErr) => {
     video.resizes[`${width}x${height}`] = { processing: true };
     DB.save();
 
-    
-    jobs.enqueue({
-        type: "resize",
-        videoId,
-        width,
-        height
-    })
+    if (cluster.isPrimary && jobs) {
+        jobs.enqueue({
+            type: "resize",
+            videoId,
+            width,
+            height
+        })
+    } else {
+        process.send({
+            messageType: "new-resize",
+            data: { videoId, width, height }
+        })
+    }
 
     res.status(200).json({
         status: "success",
