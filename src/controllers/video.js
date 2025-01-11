@@ -68,7 +68,7 @@ const getVideoAssets = async (req, res, handlerErr) => {
             case "audio": {
                 file = await fs.open(`./storage/${videoId}/audio.aac`, "r");
                 mimetype = "audio.aac";
-                filename = `${video.fileName}-audio.acc`;
+                filename = `${video.fileName}-audio.aac`;
                 break;
             }
             case "resize": {
